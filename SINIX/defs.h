@@ -120,6 +120,10 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             reverse_number(int);
+void            print_traces(void);
+int             trace_syscalls(void);
+int             get_children(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

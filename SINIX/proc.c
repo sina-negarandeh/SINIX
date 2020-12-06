@@ -10,6 +10,7 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  int state;
 } ptable;
 
 static struct proc *initproc;
@@ -531,4 +532,120 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+// Reverse the given number
+int
+reverse_number(int num)
+{
+  int revnum = 0;
+  while(num > 0){
+    revnum *= 10;
+    revnum += num % 10;
+    num /= 10;
+  }
+  cprintf("Reversed number is: %d\n", revnum);
+  return 1;
+}
+
+void
+print_traces()
+{
+  struct proc *p;
+  int numsyscalls = 24;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid <= 0 || p->pid == 2)
+      continue;
+    cprintf("%s\n", p->name);
+    for(int i = 0; i < numsyscalls; i++){
+      if(p->syscallnum[i] <= 0)
+        continue;
+      switch(i){
+          case ( 1 ) : cprintf("\tfork:\t%d\n", p->syscallnum[i]); break;
+          case ( 2 ) : cprintf("\texit\t%d\n", p->syscallnum[i]); break;
+          case ( 3 ) : cprintf("\twait\t%d\n", p->syscallnum[i]); break;
+          case ( 4 ) : cprintf("\tpipe\t%d\n", p->syscallnum[i]); break;
+          case ( 5 ) : cprintf("\tread\t%d\n", p->syscallnum[i]); break;
+          case ( 6 ) : cprintf("\tkill\t%d\n", p->syscallnum[i]); break;
+          case ( 7 ) : cprintf("\texec\t%d\n", p->syscallnum[i]); break;
+          case ( 8 ) : cprintf("\tfstat\t%d\n", p->syscallnum[i]); break;
+          case ( 9 ) : cprintf("\tchdir\t%d\n", p->syscallnum[i]); break;
+          case ( 10 ) : cprintf("\tdup\t%d\n", p->syscallnum[i]); break;
+          case ( 11 ) : cprintf("\tgetpid\t%d\n", p->syscallnum[i]); break;
+          case ( 12 ) : cprintf("\tsbrk\t%d\n", p->syscallnum[i]); break;
+          case ( 13 ) : cprintf("\tsleep\t%d\n", p->syscallnum[i]); break;
+          case ( 14 ) : cprintf("\tuptime\t%d\n", p->syscallnum[i]); break;
+          case ( 15 ) : cprintf("\topen\t%d\n", p->syscallnum[i]); break;
+          case ( 16 ) : cprintf("\twrite\t%d\n", p->syscallnum[i]); break;
+          case ( 17 ) : cprintf("\tmknod\t%d\n", p->syscallnum[i]); break;
+          case ( 18 ) : cprintf("\tunlink\t%d\n", p->syscallnum[i]); break;
+          case ( 19 ) : cprintf("\tlink\t%d\n", p->syscallnum[i]); break;
+          case ( 20 ) : cprintf("\tmkdir\t%d\n", p->syscallnum[i]); break;
+          case ( 21 ) : cprintf("\tclose\t%d\n", p->syscallnum[i]); break;
+          case ( 22 ) : cprintf("\treverse_number\t%d\n", p->syscallnum[i]); break;
+          case ( 23 ) : cprintf("\ttrace_syscalls\t%d\n", p->syscallnum[i]); break;
+          case ( 24 ) : cprintf("\tget_children\t%d\n", p->syscallnum[i]); break;
+      }
+    }
+  }
+}
+
+// If the ptable state is one, tracing of system calls begins. If the 
+// system call's argument is zero, this tracing will no longer be performed.
+int
+trace_syscalls()
+{
+  uint ticks0 = 0;
+  argint(0, &ptable.state);
+
+  while(myproc()->pid == 2){
+    if(ptable.state == 1)
+      if(ticks - ticks0 > 500){
+        acquire(&tickslock);
+        ticks0 = ticks;
+        release(&tickslock);
+        print_traces();
+      }
+  }
+  return 0;
+}
+
+// Returns children's PIDs of the given PID.
+int
+get_children()
+{
+  int parent_id;
+  argint(0,&parent_id);
+  struct proc* cur_proc;
+  int children[NPROC] = {0};
+  int childindex = 0;
+  int childcount = 0;
+  int childrenid = 0;
+
+  children[0] = parent_id;
+
+  while(children[childindex] != 0 && childindex < NPROC){
+    for (cur_proc = ptable.proc; cur_proc < &ptable.proc[NPROC]; cur_proc++){
+      int parentid = cur_proc->parent-> pid;
+      if (children[childindex] == parentid && parentid > 0){
+        children[childcount+1] = cur_proc->pid;
+        childcount++;
+      }
+    }
+    childindex++;
+  }
+
+  int size = 0;
+  for (int i = 1; i < NPROC && children[i] != 0; i++){
+    size = 10;
+    while(size <= children[i])
+        size *= 10;
+    childrenid *= size;
+    childrenid += children[i];
+  }
+  cprintf("Children id: %d\n", childrenid);
+  if(childrenid == 0)
+    return -1;
+  return 1;
 }

@@ -21,7 +21,7 @@ main(void)
 
   for(;;){
     printf(1, "init: starting sh\n");
-    printf(1, "\n\n*************************\n" //Boot Message
+    printf(1, "\n\n*************************\n" // Boot Message
               " ____ ___ _   _ _____  __ \n"
               "/ ___|_ _| \\ | |_ _\\ \\/ / \n"
               "\\___ \\| ||  \\| || | \\  /  \n"
@@ -29,17 +29,22 @@ main(void)
               "|____/___|_| \\_|___/_/\\_\\ \n\n"
               "*************************\n\n\n"
     );
-    pid = fork();
-    if(pid < 0){
-      printf(1, "init: fork failed\n");
-      exit();
+    int watcherpid = fork();
+    if(watcherpid == 0)
+      trace_syscalls(0); // Tracking is disabled
+    else{
+      pid = fork();
+      if(pid < 0){
+        printf(1, "init: fork failed\n");
+        exit();
+      }
+      if(pid == 0){
+        exec("sh", argv);
+        printf(1, "init: exec sh failed\n");
+        exit();
+      }
+      while((wpid=wait()) >= 0 && wpid != pid)
+        printf(1, "zombie!\n");
     }
-    if(pid == 0){
-      exec("sh", argv);
-      printf(1, "init: exec sh failed\n");
-      exit();
-    }
-    while((wpid=wait()) >= 0 && wpid != pid)
-      printf(1, "zombie!\n");
   }
 }

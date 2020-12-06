@@ -89,3 +89,28 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//
+//
+int
+sys_reverse_number(void)
+{
+  int number = myproc()->tf->ebx;
+  return reverse_number(number);
+}
+
+//
+//
+int
+sys_trace_syscalls(void)
+{
+  return trace_syscalls();
+}
+
+//
+//
+int
+sys_get_children(void)
+{
+  return get_children();
+}
