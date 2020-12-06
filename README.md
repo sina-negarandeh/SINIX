@@ -12,6 +12,11 @@ SINIX is an operating system cloned from [xv6](https://github.com/mit-pdos/xv6-p
       - [ctrl + b](#ctrl--b)
       - [ctrl + l](#ctrl--l)
       - [lcm](#lcm)
+    - [Part 2 (System Calls)](#part-2-system-calls)
+      - [reverse_number(int n)](#reverse_numberint-n)
+      - [trace_syscalls(int state)](#trace_syscallsint-state)
+      - [get_children(int parent_id)](#get_childrenint-parent_id)
+      - [syscalltest](#syscalltest)
   - [How to use](#how-to-use)
     - [Building and Running xv6](#building-and-running-xv6)
       - [Building xv6](#building-xv6)
@@ -55,6 +60,32 @@ Clear the screen (terminal and CGA).
 $ lcm 3 6 11 9
 $ cat lcm_result.txt
 198
+```
+
+### Part 2 (System Calls)
+
+#### reverse_number(int n)
+
+In this system call, instead of retrieving arguments in the usual way (using stack), we use registers. This system call prints the digits of the given number in reverse on the console.
+
+#### trace_syscalls(int state)
+
+This system call counts the number of times a system call is used by each process and saves it. If the input argument is one, tracing of system calls begins. If the system call's argument is zero, this tracing will no longer be performed and will also clear all the information it has stored.
+
+#### get_children(int parent_id)
+
+This system call takes a PID as an input and returns children's PIDs of the given PID.
+
+#### syscalltest
+
+`syscalltest` is a user-level program written in C language, and it has been added to the operating system user-level programs. In order to be able to test system calls, you need to use this user-level program.
+
+```shell
+$ systest
+Enter the number of a system call that you would like to test?
+1. reverse_number(int number)
+2. trace_syscalls(int state)
+3. get_children(int parent_id)
 ```
 
 ## How to use
